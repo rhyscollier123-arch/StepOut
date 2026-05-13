@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#E85D00">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Step Out">
+<meta name="description" content="Release planning app for young people leaving custody">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Step Out</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;color:#111;}
+
+:root{
+  --or:#E85D00;
+  --or-l:#FFF0E6;
+  --dk:#1A1A2E;
+  --md:#2D2D44;
+  --bg:#f5f5f5;
+  --card:#ffffff;
+  --border:#e5e5e5;
+  --text:#111111;
+  --muted:#666666;
+  --nav-h:70px;
+  --top-h:54px;
+}
+
+/* ===== LAYOUT ===== */
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh;}
+.top-bar{height:var(--top-h);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#fff;border-bottom:1px solid var(--border);position:relative;z-index:50;}
+.logo{font-size:22px;font-weight:800;color:var(--or);letter-spacing:-0.5px;}
+.logo span{color:var(--text);}
+.view-toggle{display:flex;background:#f0f0f0;border-radius:8px;padding:3px;gap:2px;}
+.vtb{padding:5px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:#666;transition:all 0.15s;}
+.vtb.active{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.12);}
+
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h) + 8px);}
+
+.bottom-nav{height:var(--nav-h);flex-shrink:0;display:flex;background:#fff;border-top:1px solid var(--border);padding:6px 0 12px;position:relative;z-index:50;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:transparent;padding:4px 0;}
+.nav-icon{font-size:24px;line-height:1;}
+.nav-label{font-size:10px;font-weight:600;color:#999;letter-spacing:0.2px;}
+.nav-item.active .nav-label{color:var(--or);}
+
+/* ===== PAGES ===== */
+.page{display:none;padding:14px 14px 0;}
+.page.active{display:block;}
+.yp-page{display:none;}
+.yp-page.active{display:block;}
+
+/* ===== STAFF CARDS ===== */
+.card{background:var(--card);border-radius:14px;border:1px solid var(--border);margin-bottom:12px;overflow:hidden;}
+.card-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.card-icon{width:32px;height:32px;border-radius:9px;background:var(--or-l);color:var(--or);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.card-title{font-size:15px;font-weight:600;color:var(--text);}
+.card-body{padding:14px 16px;}
+.hint{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.4;}
+
+/* ===== FORMS ===== */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.form-row.single{grid-template-columns:1fr;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.fg input,.fg select,.fg textarea{padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:14px;background:#fff;color:var(--text);font-family:inherit;width:100%;-webkit-appearance:none;}
+.fg textarea{resize:vertical;min-height:60px;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--or);}
+
+/* ===== CONDITIONS STAFF ===== */
+.cond-staff{background:#fafafa;border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid var(--border);}
+.cond-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.cond-top input[type=checkbox]{width:18px;height:18px;accent-color:var(--or);margin-top:2px;flex-shrink:0;cursor:pointer;}
+.cond-formal{font-size:13px;font-weight:600;color:var(--text);line-height:1.4;}
+.cond-means-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--or);margin-bottom:4px;margin-left:28px;}
+.cond-plain-wrap{margin-left:28px;}
+.cond-plain-wrap input{font-size:12px;color:var(--muted);}
+
+/* ===== CONTACT GRID ===== */
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.contact-block{background:#fafafa;border-radius:10px;padding:11px;border:1px solid var(--border);}
+.contact-role-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--or);margin-bottom:6px;}
+
+/* ===== APPTS STAFF ===== */
+.appt-staff{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
+.appt-staff:last-child{border-bottom:none;padding-bottom:0;}
+.appt-dl{font-size:11px;font-weight:700;color:var(--or);min-width:58px;flex-shrink:0;padding-top:10px;}
+
+/* ===== SERVICES STAFF ===== */
+.svc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.svc{background:#fafafa;border-radius:10px;padding:10px;border:1px solid var(--border);}
+.svc-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--or);margin-bottom:2px;}
+.svc-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.svc-desc{font-size:11px;color:var(--muted);line-height:1.4;}
+
+.gen-btn{width:100%;padding:14px;background:var(--or);color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;letter-spacing:0.2px;}
+
+/* ===== YP STYLES ===== */
+.yp-hero{background:linear-gradient(135deg,#E85D00 0%,#FF8C42 100%);padding:22px 18px 26px;position:relative;overflow:hidden;}
+.yp-hero::before{content:'';position:absolute;right:-20px;top:-20px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.08);}
+.yp-greeting{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.8);margin-bottom:4px;}
+.yp-name{font-size:26px;font-weight:800;color:white;margin-bottom:8px;letter-spacing:-0.5px;}
+.release-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.2);padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;color:white;}
+
+.yp-content{padding:14px 14px 0;background:var(--dk);min-height:100%;}
+.yp-sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#FF8C42;margin-bottom:10px;}
+.yp-card{background:var(--md);border-radius:14px;padding:14px;margin-bottom:14px;border:1px solid rgba(255,255,255,0.07);}
+
+.motiv{background:linear-gradient(135deg,#E85D00,#FF6B35);border-radius:14px;padding:16px;text-align:center;margin-bottom:16px;}
+.motiv-text{font-size:17px;font-weight:800;color:white;line-height:1.3;letter-spacing:-0.3px;}
+
+/* Home grid */
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.home-tile{background:var(--md);border-radius:14px;padding:16px;text-align:center;cursor:pointer;border:1px solid rgba(255,255,255,0.07);active:opacity:0.8;}
+.home-tile:active{opacity:0.7;}
+.home-tile-icon{font-size:28px;margin-bottom:6px;}
+.home-tile-name{font-size:13px;font-weight:700;color:white;}
+.home-tile-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;}
+.home-wide{background:var(--md);border-radius:14px;padding:14px;display:flex;align-items:center;gap:14px;cursor:pointer;border:1px solid rgba(255,255,255,0.07);}
+.home-wide:active{opacity:0.7;}
+.home-wide-icon{font-size:28px;flex-shrink:0;}
+.home-wide-name{font-size:13px;font-weight:700;color:white;}
+.home-wide-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;}
+.home-wide-arrow{margin-left:auto;font-size:20px;color:rgba(255,255,255,0.25);}
+
+/* YP conditions */
+.yp-cond{padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.07);}
+.yp-cond:last-child{border-bottom:none;padding-bottom:0;}
+.yp-cond-formal{font-size:13px;font-weight:700;color:white;margin-bottom:6px;line-height:1.4;}
+.yp-means-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#FF8C42;margin-bottom:3px;}
+.yp-cond-plain{font-size:13px;color:rgba(255,255,255,0.6);line-height:1.5;}
+
+/* YP contacts */
+.yp-contact{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.07);}
+.yp-contact:last-child{border-bottom:none;padding-bottom:0;}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--or);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:white;flex-shrink:0;}
+.contact-name{font-size:13px;font-weight:700;color:white;}
+.contact-role-yp{font-size:11px;color:rgba(255,255,255,0.45);margin-top:1px;}
+.contact-phone{margin-left:auto;font-size:12px;color:#FF8C42;font-weight:600;}
+
+/* YP appts */
+.yp-appt{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.07);}
+.yp-appt:last-child{border-bottom:none;padding-bottom:0;}
+.date-block{text-align:center;background:var(--or);border-radius:9px;padding:5px 9px;min-width:42px;flex-shrink:0;}
+.date-day{font-size:18px;font-weight:800;color:white;line-height:1;}
+.date-mon{font-size:9px;font-weight:700;color:rgba(255,255,255,0.8);text-transform:uppercase;}
+.appt-title{font-size:13px;font-weight:600;color:white;}
+.appt-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;}
+
+/* YP todos */
+.yp-todo{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.07);cursor:pointer;}
+.yp-todo:last-child{border-bottom:none;padding-bottom:0;}
+.t-circle{width:24px;height:24px;border-radius:50%;border:2px solid rgba(255,255,255,0.25);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.t-circle.done{background:var(--or);border-color:var(--or);}
+.t-tick{display:none;font-size:12px;color:white;font-weight:800;}
+.t-circle.done .t-tick{display:block;}
+.t-text{font-size:13px;color:rgba(255,255,255,0.9);line-height:1.4;}
+.t-text.done{color:rgba(255,255,255,0.3);text-decoration:line-through;}
+
+/* YP services */
+.yp-svc{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.07);}
+.yp-svc:last-child{border-bottom:none;padding-bottom:0;}
+.svc-emoji{font-size:24px;flex-shrink:0;margin-top:1px;}
+.yp-svc-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:#FF8C42;margin-bottom:2px;}
+.yp-svc-name{font-size:13px;font-weight:700;color:white;margin-bottom:3px;}
+.yp-svc-desc{font-size:12px;color:rgba(255,255,255,0.5);line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="logo">Step<span>Out</span></div>
+    <div class="view-toggle">
+      <button class="vtb active" onclick="setMode('staff')">Staff</button>
+      <button class="vtb" onclick="setMode('yp')">Young person</button>
+    </div>
+  </div>
+
+  <!-- SCROLL AREA -->
+  <div class="scroll-area" id="scroll-area">
+
+    <!-- ===== STAFF PAGES ===== -->
+
+    <div class="page active" id="sp-details">
+      <div class="card">
+        <div class="card-header"><div class="card-icon">👤</div><div class="card-title">Personal details</div></div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="fg"><label>First name</label><input type="text" id="fname" value="Jordan"></div>
+            <div class="fg"><label>Last name</label><input type="text" id="lname" value="Clarke"></div>
+          </div>
+          <div class="form-row">
+            <div class="fg"><label>Date of birth</label><input type="date" id="dob" value="2006-03-15"></div>
+            <div class="fg"><label>Release date</label><input type="date" id="reldate" value="2025-06-01"></div>
+          </div>
+          <div class="form-row single">
+            <div class="fg"><label>Home borough</label>
+              <select id="borough">
+                <option>Southwark</option><option>Lambeth</option><option>Lewisham</option>
+                <option>Greenwich</option><option>Croydon</option><option>Bromley</option>
+                <option>Tower Hamlets</option><option>Hackney</option><option>Newham</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row single">
+            <div class="fg"><label>Approved address</label><input type="text" value="14 Elm Road, Peckham, SE15 4AB"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-icon">📋</div><div class="card-title">Licence conditions</div></div>
+        <div class="card-body">
+          <p class="hint">Tick conditions that apply. Edit the plain English explanation for each one.</p>
+
+          <div class="cond-staff">
+            <div class="cond-top"><input type="checkbox" checked><div class="cond-formal">You must report to your supervising officer as and when required to do so.</div></div>
+            <div class="cond-means-lbl">What this means</div>
+            <div class="cond-plain-wrap"><input type="text" value="Go to your YOT appointment every time you're asked. Missing it could send you back."></div>
+          </div>
+
+          <div class="cond-staff">
+            <div class="cond-top"><input type="checkbox" checked><div class="cond-formal">You must not commit any offence.</div></div>
+            <div class="cond-means-lbl">What this means</div>
+            <div class="cond-plain-wrap"><input type="text" value="Any crime, even a small one, could mean you go straight back inside. Stay out of trouble."></div>
+          </div>
+
+          <div class="cond-staff">
+            <div class="cond-top"><input type="checkbox" checked><div class="cond-formal">You must reside permanently at an address approved by your supervising officer.</div></div>
+            <div class="cond-means-lbl">What this means</div>
+            <div class="cond-plain-wrap"><input type="text" value="You must sleep at your approved address every night. If you want to move, speak to your worker first."></div>
+          </div>
+
+          <div class="cond-staff">
+            <div class="cond-top"><input type="checkbox"><div class="cond-formal">You must not contact or associate with [named individuals].</div></div>
+            <div class="cond-means-lbl">What this means</div>
+            <div class="cond-plain-wrap"><input type="text" value="There are specific people you are not allowed to speak to or be around. Your worker will tell you who."></div>
+          </div>
+
+          <div class="cond-staff">
+            <div class="cond-top"><input type="checkbox" checked><div class="cond-formal">You must be of good behaviour and not behave in a way which undermines the purpose of your licence.</div></div>
+            <div class="cond-means-lbl">What this means</div>
+            <div class="cond-plain-wrap"><input type="text" value="Keep your head down. Be respectful, avoid drama, and show you're serious about making changes."></div>
+          </div>
+
+          <div class="cond-staff">
+            <div class="cond-top"><input type="checkbox"><div class="cond-formal">Curfew: you must remain at your approved address between the hours of [time] and [time].</div></div>
+            <div class="cond-means-lbl">What this means</div>
+            <div class="cond-plain-wrap"><input type="text" value="You must be home and stay home between certain hours. Breaking curfew is a serious breach."></div>
+          </div>
+
+          <div class="cond-staff">
+            <div class="cond-top"><input type="checkbox"><div class="cond-formal">You must submit to electronic monitoring as directed.</div></div>
+            <div class="cond-means-lbl">What this means</div>
+            <div class="cond-plain-wrap"><input type="text" value="You'll wear a tag on your ankle. It tracks your location. Don't tamper with it."></div>
+          </div>
+        </div>
+      </div>
+      <button class="gen-btn" onclick="setMode('yp')">Preview young person view ↗</button>
+      <div style="height:14px;"></div>
+    </div>
+
+    <div class="page" id="sp-contacts">
+      <div class="card">
+        <div class="card-header"><div class="card-icon">📞</div><div class="card-title">Key contacts</div></div>
+        <div class="card-body">
+          <div class="contact-grid">
+            <div class="contact-block">
+              <div class="contact-role-lbl">YOT Worker</div>
+              <div class="fg" style="margin-bottom:6px"><label>Name</label><input type="text" value="Sarah Okafor"></div>
+              <div class="fg"><label>Phone</label><input type="tel" value="020 7946 0123"></div>
+            </div>
+            <div class="contact-block">
+              <div class="contact-role-lbl">Social Worker</div>
+              <div class="fg" style="margin-bottom:6px"><label>Name</label><input type="text" value="Marcus Webb"></div>
+              <div class="fg"><label>Phone</label><input type="tel" value="020 7946 0456"></div>
+            </div>
+            <div class="contact-block">
+              <div class="contact-role-lbl">Key Worker</div>
+              <div class="fg" style="margin-bottom:6px"><label>Name</label><input type="text" value="Priya Sharma"></div>
+              <div class="fg"><label>Phone</label><input type="tel" value="020 7946 0789"></div>
+            </div>
+            <div class="contact-block">
+              <div class="contact-role-lbl">Emergency</div>
+              <div class="fg" style="margin-bottom:6px"><label>Name</label><input type="text" value="YOT Emergency Line"></div>
+              <div class="fg"><label>Phone</label><input type="tel" value="0800 123 4567"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="sp-calendar">
+      <div class="card">
+        <div class="card-header"><div class="card-icon">📅</div><div class="card-title">Appointments</div></div>
+        <div class="card-body">
+          <div class="appt-staff">
+            <div class="appt-dl">2 Jun</div>
+            <div class="fg" style="flex:1"><input type="text" value="Report to YOT — first appointment, 2pm, Southwark YOT"></div>
+          </div>
+          <div class="appt-staff">
+            <div class="appt-dl">5 Jun</div>
+            <div class="fg" style="flex:1"><input type="text" value="GP registration, 10am — bring ID"></div>
+          </div>
+          <div class="appt-staff">
+            <div class="appt-dl">10 Jun</div>
+            <div class="fg" style="flex:1"><input type="text" value="Social worker home visit — Marcus Webb"></div>
+          </div>
+          <div class="appt-staff">
+            <div class="appt-dl">16 Jun</div>
+            <div class="fg" style="flex:1"><input type="text" value="Education assessment, Catch22, 1pm, Borough High St"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="sp-todos">
+      <div class="card">
+        <div class="card-header"><div class="card-icon">✅</div><div class="card-title">First week checklist</div></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;gap:10px;align-items:center;"><input type="checkbox" style="accent-color:var(--or);width:18px;height:18px;flex-shrink:0;"><input type="text" value="Contact YOT worker to confirm appointment"></div>
+            <div style="display:flex;gap:10px;align-items:center;"><input type="checkbox" style="accent-color:var(--or);width:18px;height:18px;flex-shrink:0;"><input type="text" value="Register with a GP"></div>
+            <div style="display:flex;gap:10px;align-items:center;"><input type="checkbox" style="accent-color:var(--or);width:18px;height:18px;flex-shrink:0;"><input type="text" value="Open a bank account"></div>
+            <div style="display:flex;gap:10px;align-items:center;"><input type="checkbox" style="accent-color:var(--or);width:18px;height:18px;flex-shrink:0;"><input type="text" value="Apply for Universal Credit if eligible"></div>
+            <div style="display:flex;gap:10px;align-items:center;"><input type="checkbox" style="accent-color:var(--or);width:18px;height:18px;flex-shrink:0;"><input type="text" value="Collect ID documents from family"></div>
+            <div style="display:flex;gap:10px;align-items:center;"><input type="checkbox" style="accent-color:var(--or);width:18px;height:18px;flex-shrink:0;"><input type="text" value="Set up phone / get a SIM card"></div>
+            <div style="display:flex;gap:10px;align-items:center;"><input type="checkbox" style="accent-color:var(--or);width:18px;height:18px;flex-shrink:0;"><input type="text" value="Contact education or employment support"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="sp-services">
+      <div class="card">
+        <div class="card-header"><div class="card-icon">🏘️</div><div class="card-title">Community services</div></div>
+        <div class="card-body">
+          <div class="svc-grid">
+            <div class="svc"><div class="svc-cat">Housing</div><div class="svc-name">Nacro</div><div class="svc-desc">Supported housing for young people leaving custody.</div></div>
+            <div class="svc"><div class="svc-cat">Education</div><div class="svc-name">Catch22</div><div class="svc-desc">Training, apprenticeships & jobs. Borough High St.</div></div>
+            <div class="svc"><div class="svc-cat">Support</div><div class="svc-name">St Giles Trust</div><div class="svc-desc">Peer mentoring from people with lived experience.</div></div>
+            <div class="svc"><div class="svc-cat">Mental Health</div><div class="svc-name">Kooth</div><div class="svc-desc">Free online support for under-25s. kooth.com</div></div>
+            <div class="svc"><div class="svc-cat">Food</div><div class="svc-name">Trussell Trust</div><div class="svc-desc">Food banks across Southwark & South London.</div></div>
+            <div class="svc"><div class="svc-cat">Sport</div><div class="svc-name">Better Gyms</div><div class="svc-desc">Low-cost gyms. Bermondsey, Elephant & Castle.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== YP PAGES ===== -->
+
+    <div class="yp-page active" id="yp-home">
+      <div class="yp-hero">
+        <div class="yp-greeting">Welcome back</div>
+        <div class="yp-name" id="yp-name-display">Jordan Clarke</div>
+        <div class="release-tag">🗓 Released 1 June 2025</div>
+      </div>
+      <div class="yp-content">
+        <div class="motiv"><div class="motiv-text">You've done the hard part.<br>Now build the life you want. 🔥</div></div>
+        <div class="yp-sec-title">Your plan</div>
+        <div class="home-grid">
+          <div class="home-tile" onclick="ypNav('yp-conditions')">
+            <div class="home-tile-icon">📋</div>
+            <div class="home-tile-name">Licence</div>
+            <div class="home-tile-sub">Your conditions</div>
+          </div>
+          <div class="home-tile" onclick="ypNav('yp-contacts')">
+            <div class="home-tile-icon">👥</div>
+            <div class="home-tile-name">Your team</div>
+            <div class="home-tile-sub">Key contacts</div>
+          </div>
+          <div class="home-tile" onclick="ypNav('yp-calendar')">
+            <div class="home-tile-icon">📅</div>
+            <div class="home-tile-name">Appointments</div>
+            <div class="home-tile-sub">Next: 2 Jun</div>
+          </div>
+          <div class="home-tile" onclick="ypNav('yp-todos')">
+            <div class="home-tile-icon">✅</div>
+            <div class="home-tile-name">Checklist</div>
+            <div class="home-tile-sub">7 tasks to do</div>
+          </div>
+        </div>
+        <div class="home-wide" onclick="ypNav('yp-services')">
+          <div class="home-wide-icon">🏘️</div>
+          <div>
+            <div class="home-wide-name">Help near you</div>
+            <div class="home-wide-sub">Housing · jobs · mental health · gyms</div>
+          </div>
+          <div class="home-wide-arrow">›</div>
+        </div>
+        <div style="height:14px;"></div>
+      </div>
+    </div>
+
+    <div class="yp-page" id="yp-conditions">
+      <div class="yp-hero">
+        <div class="yp-greeting">Your licence</div>
+        <div class="yp-name" style="font-size:20px;">Know your conditions</div>
+      </div>
+      <div class="yp-content">
+        <div class="yp-card">
+          <div class="yp-cond">
+            <div class="yp-cond-formal">You must report to your supervising officer as and when required to do so.</div>
+            <div class="yp-means-lbl">What this means</div>
+            <div class="yp-cond-plain">Go to your YOT appointment every time you're asked. Missing it could send you back.</div>
+          </div>
+          <div class="yp-cond">
+            <div class="yp-cond-formal">You must not commit any offence.</div>
+            <div class="yp-means-lbl">What this means</div>
+            <div class="yp-cond-plain">Any crime, even a small one, could mean you go straight back inside. Stay out of trouble.</div>
+          </div>
+          <div class="yp-cond">
+            <div class="yp-cond-formal">You must reside permanently at an address approved by your supervising officer.</div>
+            <div class="yp-means-lbl">What this means</div>
+            <div class="yp-cond-plain">You must sleep at your approved address every night. If you want to move, speak to your worker first.</div>
+          </div>
+          <div class="yp-cond">
+            <div class="yp-cond-formal">You must be of good behaviour and not behave in a way which undermines the purpose of your licence.</div>
+            <div class="yp-means-lbl">What this means</div>
+            <div class="yp-cond-plain">Keep your head down. Be respectful, avoid drama, and show you're serious about making changes.</div>
+          </div>
+        </div>
+        <div style="height:14px;"></div>
+      </div>
+    </div>
+
+    <div class="yp-page" id="yp-contacts">
+      <div class="yp-hero">
+        <div class="yp-greeting">Your support</div>
+        <div class="yp-name" style="font-size:20px;">Your team</div>
+      </div>
+      <div class="yp-content">
+        <div class="yp-card">
+          <div class="yp-contact">
+            <div class="avatar">SO</div>
+            <div><div class="contact-name">Sarah Okafor</div><div class="contact-role-yp">YOT Worker</div></div>
+            <div class="contact-phone">020 7946 0123</div>
+          </div>
+          <div class="yp-contact">
+            <div class="avatar">MW</div>
+            <div><div class="contact-name">Marcus Webb</div><div class="contact-role-yp">Social Worker</div></div>
+            <div class="contact-phone">020 7946 0456</div>
+          </div>
+          <div class="yp-contact">
+            <div class="avatar">PS</div>
+            <div><div class="contact-name">Priya Sharma</div><div class="contact-role-yp">Key Worker</div></div>
+            <div class="contact-phone">020 7946 0789</div>
+          </div>
+          <div class="yp-contact">
+            <div class="avatar" style="background:#444;font-size:18px;">🆘</div>
+            <div><div class="contact-name">Emergency Line</div><div class="contact-role-yp">Out of hours</div></div>
+            <div class="contact-phone">0800 123 4567</div>
+          </div>
+        </div>
+        <div style="height:14px;"></div>
+      </div>
+    </div>
+
+    <div class="yp-page" id="yp-calendar">
+      <div class="yp-hero">
+        <div class="yp-greeting">What's coming up</div>
+        <div class="yp-name" style="font-size:20px;">Your appointments</div>
+      </div>
+      <div class="yp-content">
+        <div class="yp-card">
+          <div class="yp-appt">
+            <div class="date-block"><div class="date-day">2</div><div class="date-mon">Jun</div></div>
+            <div><div class="appt-title">Report to YOT — first appointment</div><div class="appt-sub">Southwark YOT · 2pm · Bring this plan</div></div>
+          </div>
+          <div class="yp-appt">
+            <div class="date-block"><div class="date-day">5</div><div class="date-mon">Jun</div></div>
+            <div><div class="appt-title">GP registration</div><div class="appt-sub">Local surgery · 10am · Bring ID</div></div>
+          </div>
+          <div class="yp-appt">
+            <div class="date-block"><div class="date-day">10</div><div class="date-mon">Jun</div></div>
+            <div><div class="appt-title">Social worker check-in</div><div class="appt-sub">Home visit · Marcus Webb</div></div>
+          </div>
+          <div class="yp-appt">
+            <div class="date-block"><div class="date-day">16</div><div class="date-mon">Jun</div></div>
+            <div><div class="appt-title">Education & training assessment</div><div class="appt-sub">Catch22 · 1pm · Borough High St</div></div>
+          </div>
+        </div>
+        <div style="height:14px;"></div>
+      </div>
+    </div>
+
+    <div class="yp-page" id="yp-todos">
+      <div class="yp-hero">
+        <div class="yp-greeting">First week</div>
+        <div class="yp-name" style="font-size:20px;">Your checklist</div>
+      </div>
+      <div class="yp-content">
+        <div class="yp-card">
+          <div class="yp-todo" onclick="toggleTodo(this)"><div class="t-circle"><span class="t-tick">✓</span></div><div class="t-text">Contact your YOT worker to confirm your appointment</div></div>
+          <div class="yp-todo" onclick="toggleTodo(this)"><div class="t-circle"><span class="t-tick">✓</span></div><div class="t-text">Register with a GP</div></div>
+          <div class="yp-todo" onclick="toggleTodo(this)"><div class="t-circle"><span class="t-tick">✓</span></div><div class="t-text">Open a bank account</div></div>
+          <div class="yp-todo" onclick="toggleTodo(this)"><div class="t-circle"><span class="t-tick">✓</span></div><div class="t-text">Apply for Universal Credit if eligible</div></div>
+          <div class="yp-todo" onclick="toggleTodo(this)"><div class="t-circle"><span class="t-tick">✓</span></div><div class="t-text">Collect ID documents from family</div></div>
+          <div class="yp-todo" onclick="toggleTodo(this)"><div class="t-circle"><span class="t-tick">✓</span></div><div class="t-text">Set up phone / get a SIM card</div></div>
+          <div class="yp-todo" onclick="toggleTodo(this)"><div class="t-circle"><span class="t-tick">✓</span></div><div class="t-text">Contact education or employment support</div></div>
+        </div>
+        <div style="height:14px;"></div>
+      </div>
+    </div>
+
+    <div class="yp-page" id="yp-services">
+      <div class="yp-hero">
+        <div class="yp-greeting">Southwark & South London</div>
+        <div class="yp-name" style="font-size:20px;">Help near you</div>
+      </div>
+      <div class="yp-content">
+        <div class="yp-card">
+          <div class="yp-svc"><div class="svc-emoji">🏠</div><div><div class="yp-svc-cat">Housing</div><div class="yp-svc-name">Nacro Housing</div><div class="yp-svc-desc">Supported housing for young people leaving custody in Southwark.</div></div></div>
+          <div class="yp-svc"><div class="svc-emoji">🎓</div><div><div class="yp-svc-cat">Education & Jobs</div><div class="yp-svc-name">Catch22</div><div class="yp-svc-desc">Apprenticeships, training and job support. Borough High St, SE1.</div></div></div>
+          <div class="yp-svc"><div class="svc-emoji">🤝</div><div><div class="yp-svc-cat">Mentoring</div><div class="yp-svc-name">St Giles Trust</div><div class="yp-svc-desc">Peer mentors who've been through the system. No judgement, real support.</div></div></div>
+          <div class="yp-svc"><div class="svc-emoji">🧠</div><div><div class="yp-svc-cat">Mental Health</div><div class="yp-svc-name">Kooth</div><div class="yp-svc-desc">Free online mental health support for under-25s. Available anytime at kooth.com.</div></div></div>
+          <div class="yp-svc"><div class="svc-emoji">🍞</div><div><div class="yp-svc-cat">Food</div><div class="yp-svc-name">Trussell Trust</div><div class="yp-svc-desc">Food banks across Southwark. Ask your social worker for a referral.</div></div></div>
+          <div class="yp-svc"><div class="svc-emoji">💪</div><div><div class="yp-svc-cat">Sport & Activity</div><div class="yp-svc-name">Better Gyms</div><div class="yp-svc-desc">Low-cost gym membership. Bermondsey, Elephant & Castle and more.</div></div></div>
+        </div>
+        <div style="height:14px;"></div>
+      </div>
+    </div>
+
+  </div><!-- end scroll-area -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav" id="bottom-nav"></div>
+
+</div><!-- end app -->
+
+<script>
+var mode = 'staff';
+var curStaff = 'details';
+var curYp = 'home';
+
+var staffNav = [
+  {id:'details', icon:'👤', label:'Details'},
+  {id:'contacts', icon:'📞', label:'Contacts'},
+  {id:'calendar', icon:'📅', label:'Calendar'},
+  {id:'todos', icon:'✅', label:'To-dos'},
+  {id:'services', icon:'🏘️', label:'Services'},
+];
+
+var ypNav = [
+  {id:'home', icon:'🏠', label:'Home'},
+  {id:'conditions', icon:'📋', label:'Licence'},
+  {id:'contacts', icon:'👥', label:'My team'},
+  {id:'calendar', icon:'📅', label:'Dates'},
+  {id:'todos', icon:'✅', label:'Checklist'},
+  {id:'services', icon:'🏘️', label:'Help'},
+];
+
+function renderNav(defs, active, fn) {
+  document.getElementById('bottom-nav').innerHTML = defs.map(function(d) {
+    return '<button class="nav-item' + (d.id===active?' active':'') + '" onclick="' + fn + '(\'' + d.id + '\')">'
+      + '<span class="nav-icon">' + d.icon + '</span>'
+      + '<span class="nav-label" style="' + (d.id===active?'color:var(--or)':'') + '">' + d.label + '</span>'
+      + '</button>';
+  }).join('');
+}
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.vtb').forEach(function(b, i) {
+    b.classList.toggle('active', (i===0&&m==='staff')||(i===1&&m==='yp'));
+  });
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.yp-page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('scroll-area').scrollTop = 0;
+
+  if (m === 'staff') {
+    document.getElementById('sp-' + curStaff).classList.add('active');
+    document.getElementById('scroll-area').style.background = '#f5f5f5';
+    renderNav(staffNav, curStaff, 'goStaff');
+  } else {
+    var fname = document.getElementById('fname').value;
+    var lname = document.getElementById('lname').value;
+    document.getElementById('yp-name-display').textContent = fname + ' ' + lname;
+    document.getElementById('yp-' + curYp).classList.add('active');
+    document.getElementById('scroll-area').style.background = '#1A1A2E';
+    renderNav(ypNav, curYp, 'goYp');
+  }
+}
+
+function goStaff(page) {
+  curStaff = page;
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('sp-' + page).classList.add('active');
+  document.getElementById('scroll-area').scrollTop = 0;
+  renderNav(staffNav, page, 'goStaff');
+}
+
+function goYp(page) {
+  curYp = page;
+  document.querySelectorAll('.yp-page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('yp-' + page).classList.add('active');
+  document.getElementById('scroll-area').scrollTop = 0;
+  renderNav(ypNav, page, 'goYp');
+}
+
+function ypNav(page) { goYp(page); }
+
+function toggleTodo(el) {
+  el.querySelector('.t-circle').classList.toggle('done');
+  el.querySelector('.t-text').classList.toggle('done');
+}
+
+renderNav(staffNav, 'details', 'goStaff');
+</script>
+
+<!-- PWA Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').then(function(reg) {
+      console.log('SW registered');
+    }).catch(function(err) {
+      console.log('SW failed:', err);
+    });
+  });
+}
+</script>
+
+</body>
+</html>
